@@ -1,12 +1,2 @@
-# react_masterclass
-react-masterclass with nomadcoder
-
-# Using:
-- Styled Components
-- Recoil
-- React Query
-- React Router DOM
-- Apex Charts
-- React Spring
-- Typescript
-- Firebase
+# to_do_list_Recoil
+implement to_do_list with React.js and TypeScript and Recoil
