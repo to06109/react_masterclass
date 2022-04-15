@@ -1,6 +1,6 @@
 import styled from 'styled-components'
-import { motion } from 'framer-motion'
-import { useRef } from 'react'
+import { motion, useMotionValue, useTransform } from 'framer-motion'
+import { useEffect, useRef } from 'react'
 
 const Wrapper = styled.div`
   height: 100vh;
@@ -35,23 +35,22 @@ const boxVariants = {
 
 }
 
-
 function App() {
-  // 코드로 특정 element 잡아옴
-  const biggerBoxRef = useRef<HTMLDivElement>(null)
+  // x는 -800 ~ 800까지 제한값을 가짐
+  const x = useMotionValue(0)
+  // 변환할 값, input, output -> scale값은 0.1 ~ 2의 값을 가짐
+  const scale = useTransform(x, [-800, 0, 800],[2, 1, 0.1])
+  useEffect(() => { 
+    // x.onChange(() => console.log(x.get()))
+    x.onChange(() => console.log(scale.get()))
+  }, [x])
   return (
     <Wrapper>
-      <BiggerBox ref={biggerBoxRef}>
-      <Box 
-        drag
+      <Box  
+        style={{ x, scale: scale }}
+        drag="x"
         dragSnapToOrigin
-        dragElastic={0.5}
-        dragConstraints={biggerBoxRef}
-        variants={boxVariants}
-        whileHover= "hover"
-        whileTap= "tap"
       />
-      </BiggerBox>
     </Wrapper>
   )
 }
