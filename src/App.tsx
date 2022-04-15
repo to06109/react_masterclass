@@ -1,26 +1,14 @@
 import styled from 'styled-components'
-import { motion, useMotionValue, useTransform } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import { motion, useMotionValue, useTransform, useViewportScroll } from 'framer-motion'
 
-const Wrapper = styled.div`
-  height: 100vh;
+const Wrapper = styled(motion.div)`
+  // 스크롤 할 수 있게 높이 키움
+  height: 200vh;
   width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
 `
-
-const BiggerBox = styled.div`
-  width: 600px;
-  height: 600px;
-  background-color: rgba(255, 255, 255, 0.4);
-  border-radius: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-`
-
 const Box = styled(motion.div)`
   width: 200px;
   height: 200px;
@@ -28,26 +16,25 @@ const Box = styled(motion.div)`
   border-radius: 40px;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.06);
 `
-
-const boxVariants = {
-  hover: { scale: 1.5, rotateZ: 90 },
-  tap:{scale: 1, borderRadius: "100px"},
-
-}
-
 function App() {
-  // x는 -800 ~ 800까지 제한값을 가짐
+  // x축 드래그값 받기
   const x = useMotionValue(0)
-  // 변환할 값, input, output -> scale값은 0.1 ~ 2의 값을 가짐
-  const scale = useTransform(x, [-800, 0, 800],[2, 1, 0.1])
-  useEffect(() => { 
-    // x.onChange(() => console.log(x.get()))
-    x.onChange(() => console.log(scale.get()))
-  }, [x])
+  // 드래그값 -> 회전값 변환
+  const rotateZ = useTransform(x, [-800, 800],[-360, 360])
+  // 드래그값 -> 색상값 변환
+  const gradient = useTransform(x, [-800, 800], [
+    "linear-gradient(135deg,rgb(31, 227, 237), rgb(0, 27, 206)))",
+    "linear-gradient(135deg,rgb(0, 238, 0),rgb(225, 198, 19))"])
+  
+  // y축 스크롤값 받기 
+  const {scrollYProgress} = useViewportScroll()
+  // 스크롤값 -> scale값 변환 (더 빨리 커지도록 단위 변환)
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 5])
+
   return (
-    <Wrapper>
+    <Wrapper style={{background: gradient}}>
       <Box  
-        style={{ x, scale: scale }}
+        style={{ x, rotateZ, scale}}
         drag="x"
         dragSnapToOrigin
       />
