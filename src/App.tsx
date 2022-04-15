@@ -1,6 +1,12 @@
 import styled from 'styled-components'
-import { AnimatePresence, motion, useMotionValue, useTransform, useViewportScroll } from 'framer-motion'
-import { useState } from 'react';
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useTransform,
+  useViewportScroll,
+} from 'framer-motion'
+import { useState } from 'react'
 
 const Wrapper = styled(motion.div)`
   height: 100vh;
@@ -16,7 +22,7 @@ const Box = styled(motion.div)`
   background-color: rgba(255, 255, 255, 1);
   border-radius: 35px;
   position: absolute;
-  top: 250px;
+  top: 100px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -24,42 +30,61 @@ const Box = styled(motion.div)`
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.06);
 `
 const box = {
-  invisible: {
-    x: 500,
+  // 함수에서 object return하려면 괄호로 감싸야함
+  entry: (back: boolean) => ({
+    // 뒤로 가는 거면 entry가 왼쪽(-500)에서 와야함
+    x: back ? -500 : 500,
     opacity: 0,
     scale: 0,
-  },
-  visible: {
+    transition: {
+      duration: 0.3,
+    },
+  }),
+  center: {
     x: 0,
     opacity: 1,
     scale: 1,
     transition: {
-      duration: 1, 
-    }
+      duration: 0.3,
+    },
   },
-  exit: {
-    x: -500,
+  exit: (back: boolean) => ({
+    // 뒤로 가는 거면 exit가 오른쪽(500)으로 가야함
+    x: back ? 500 : -500,
     opacity: 0,
     scale: 0,
     transition: {
-      duration: 1, 
-    }
-  },
+      duration: 0.3,
+    },
+  }),
 }
 
 function App() {
   const [visible, setVisible] = useState(1)
-  const nextPlease = () => setVisible(prev => prev === 10 ? 10 : prev + 1)
-  const prevPlease = () => setVisible(prev => prev === 1 ? 1 : prev - 1)
+  // 뒤로 가는지 여부 확인
+  const [back, setBack] = useState(false)
+  const nextPlease = () => {
+    // next 버튼 누르면 back = false
+    setBack(false)
+    setVisible((prev) => (prev === 10 ? 10 : prev + 1))
+  }
+  const prevPlease = () => {
+    // prev 버튼 누르면 back = true
+    setBack(true)
+    setVisible((prev) => (prev === 1 ? 1 : prev - 1))
+  }
   return (
     <Wrapper>
-      <AnimatePresence>
-        <Box 
-          variants={box} 
-          initial="invisible" 
-          animate="visible" 
-          exit="exit" 
-          key={visible}>{visible}
+      <AnimatePresence custom={back}>
+        <Box
+          custom={back}
+          variants={box}
+          initial="entry"
+          animate="center"
+          exit="exit"
+          key={visible}
+        >
+          {visible}
         </Box>
       </AnimatePresence>
       <button onClick={nextPlease}>next</button>
@@ -67,7 +92,5 @@ function App() {
     </Wrapper>
   )
 }
-
-// # 7.13 2: 36
 
 export default App
