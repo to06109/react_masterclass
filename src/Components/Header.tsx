@@ -1,9 +1,9 @@
-import styled from 'styled-components'
-import { motion } from 'framer-motion'
-import { Link, useRouteMatch } from 'react-router-dom'
-import { useState } from 'react'
+import styled from "styled-components";
+import { motion, useAnimation, useViewportScroll } from "framer-motion";
+import { Link, useRouteMatch } from "react-router-dom";
+import { useEffect, useState } from "react";
 
-const Nav = styled.nav`
+const Nav = styled(motion.nav)`
   display: flex;
   // 아이템들의 “사이(between)”에 균일한 간격을 만들어 줌
   justify-content: space-between;
@@ -11,17 +11,16 @@ const Nav = styled.nav`
   position: fixed;
   width: 100%;
   top: 0;
-  background-color: black;
   height: 80px;
   font-size: 12px;
   padding: 20px 60px;
   color: white;
-`
+`;
 // Nav 안의 두개의 열
 const Col = styled.div`
   display: flex;
   align-items: center;
-`
+`;
 
 const Logo = styled(motion.svg)`
   margin-right: 50px;
@@ -32,12 +31,12 @@ const Logo = styled(motion.svg)`
     stroke-width: 6px;
     stroke: white;
   }
-`
+`;
 const Items = styled.ul`
   display: flex;
   // 수직정렬
   align-items: center;
-`
+`;
 const Item = styled.li`
   margin-right: 20px;
   margin-right: 20px;
@@ -51,7 +50,7 @@ const Item = styled.li`
   &:hover {
     color: ${(props) => props.theme.white.lighter};
   }
-`
+`;
 const Search = styled.span`
   color: white;
   display: flex;
@@ -60,7 +59,7 @@ const Search = styled.span`
     height: 20px;
   }
   position: relative;
-`
+`;
 
 const Circle = styled(motion.span)`
   width: 5px;
@@ -74,15 +73,23 @@ const Circle = styled(motion.span)`
   margin: 0 auto;
 
   background-color: ${(props) => props.theme.red};
-`
+`;
 
 const Input = styled(motion.input)`
   // 변화가 시작하는 위치
   transform-origin: right center;
   // input이 search버튼 왼쪽에 있게함
   position: absolute;
-  left: -190px;
-`
+  right: 0px;
+  padding: 5px 10px;
+  padding-left: 40px;
+  z-index: -1;
+  color: white;
+  font-size: 16px;
+  // input 배경 투명하게
+  background-color: transparent;
+  border: 1px solid ${(props) => props.theme.white.lighter};
+`;
 
 const logoVariants = {
   normal: {
@@ -97,17 +104,52 @@ const logoVariants = {
       repeat: Infinity,
     },
   },
-}
+};
+
+const navVariants = {
+  top: {
+    backgroundColor: "rgba(0, 0, 0, 0)",
+  },
+  scroll: {
+    backgroundColor: "rgba(0, 0, 0, 1)",
+  },
+};
 
 function Header() {
-  const [searchOpen, setSearchOpen] = useState(false)
-  const homeMatch = useRouteMatch('/')
-  const tvMatch = useRouteMatch('/tv')
-  console.log(homeMatch, tvMatch)
+  const [searchOpen, setSearchOpen] = useState(false);
+  const homeMatch = useRouteMatch("/");
+  const tvMatch = useRouteMatch("/tv");
+  const inputAnimation = useAnimation();
+  const navAnimation = useAnimation();
+  const { scrollY } = useViewportScroll();
+  const toggleSearch = () => {
+    if (searchOpen) {
+      // 검색창이 열려있으면 닫는 애니메이션 실행
+      // trigger the close animation
+      inputAnimation.start({
+        scaleX: 0,
+      });
+    } else {
+      // trigger the open animation
+      inputAnimation.start({
+        scaleX: 1,
+      });
+    }
+    setSearchOpen((prev) => !prev);
+  };
+  // scrollY는 컴포넌트를 새로고침하지 않기 때문에 이렇게 onChange를 이용해서 값을 읽어야함
+  useEffect(() => {
+    scrollY.onChange(() => {
+      if (scrollY.get() > 80) {
+        navAnimation.start("scroll");
+      } else {
+        navAnimation.start("top");
+      }
+    });
+  }, [scrollY, navAnimation]);
 
-  const toggleSearch = () => setSearchOpen(prev => !prev)
   return (
-    <Nav>
+    <Nav animate={navAnimation} variants={navVariants} initial="top">
       <Col>
         <Logo
           variants={logoVariants}
@@ -124,11 +166,15 @@ function Header() {
         <Items>
           <Item>
             {/* homeMatch의 isExact가 true인지 확인하고 Circle컴포넌트를 보여줌 */}
-            <Link to="/">Home {homeMatch?.isExact && <Circle layoutId='circle'/>}</Link>
+            <Link to="/">
+              Home {homeMatch?.isExact && <Circle layoutId="circle" />}
+            </Link>
           </Item>
           <Item>
             {/* tvMatch가 존재하는 지 확인하고 Circle컴포넌트를 보여줌 */}
-            <Link to="/tv">TV Shows {tvMatch && <Circle layoutId='circle'/>}</Link>
+            <Link to="/tv">
+              TV Shows {tvMatch && <Circle layoutId="circle" />}
+            </Link>
           </Item>
         </Items>
       </Col>
@@ -137,9 +183,9 @@ function Header() {
           <motion.svg
             onClick={toggleSearch}
             // searchOpen에 따라 돋보기가 움직임
-            animate={{x: searchOpen ? -220 : 0}}
+            animate={{ x: searchOpen ? -220 : 0 }}
             // 움직일 때 튀지않게 linear로 바꿔줌
-            transition={{type:"linear"}}
+            transition={{ type: "linear" }}
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"
@@ -151,10 +197,15 @@ function Header() {
             ></path>
           </motion.svg>
           {/* searchOpen이 true면 scaleX 1, 아니면 0 -> 애니메이션 중앙에서 시작함*/}
-          <Input transition={{type:"linear"}} animate={{ scaleX: searchOpen ? 1 : 0}} placeholder='Search for movie or tv shhow...' />
+          <Input
+            animate={inputAnimation}
+            initial={{ scaleX: 0 }}
+            transition={{ type: "linear" }}
+            placeholder="Search for movie or tv shhow..."
+          />
         </Search>
       </Col>
     </Nav>
-  )
+  );
 }
-export default Header
+export default Header;
