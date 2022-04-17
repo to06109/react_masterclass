@@ -65,9 +65,16 @@ const Box = styled(motion.div)<{ bgPhoto: string }>`
   background-color: white;
   background-image: url(${(props) => props.bgPhoto});
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   height: 200px;
   font-size: 66px;
+  // 포스터 잘리지 않게 첫번째, 마지막 박스는 transform-origin 줌
+  &:first-child {
+    transform-origin: center left;
+  }
+  &:last-child {
+    transform-origin: center right;
+  }
 `
 
 const rowVariants = {
@@ -77,6 +84,24 @@ const rowVariants = {
   },
   visible: { x: 0 },
   exit: { x: -window.outerWidth - 5 },
+}
+
+// Box Animation
+const BoxVariants = {
+  normal: {
+    scale: 1,
+  },
+  hover: {
+    scale: 1.3,
+    // 약간 올라가게
+    y: -50,
+    // hover일때만 delay주기
+    transition: {
+      delay: 0.5,
+      duaration: 0.3,
+      type: 'tween',
+    },
+  },
 }
 
 // 한 번에 보여주고 싶은 영화의 수
@@ -136,6 +161,10 @@ function Home() {
                   .map((movie) => (
                     <Box
                       key={movie.id}
+                      whileHover="hover"
+                      initial="normal"
+                      variants={BoxVariants}
+                      transition={{ type: 'tween' }}
                       bgPhoto={makeImagePath(movie.backdrop_path, 'w500')}
                     />
                   ))}
