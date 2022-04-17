@@ -57,8 +57,8 @@ function Home() {
           {/* bgPhoto로 이미지의 링크를 만들어서 보냄 */}
           {/* data가 존재하지 않을 때의 fallback 만들어줘야함 */}
           <Banner bgPhoto={makeImagePath(data?.results[0].backdrop_path || "")}>
-            <Title>{data?.results[0].title}</Title>
-            <Overview>{data?.results[0].overview}</Overview>
+            <Title>{data?.results[0].title || undefined}</Title>
+            <Overview>{data?.results[0].overview || undefined}</Overview>
           </Banner>
         </>
       )}
