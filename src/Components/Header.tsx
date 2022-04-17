@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import { Link, useRouteMatch } from 'react-router-dom'
+import { useState } from 'react'
 
 const Nav = styled.nav`
   display: flex;
@@ -53,12 +54,15 @@ const Item = styled.li`
 `
 const Search = styled.span`
   color: white;
+  display: flex;
+  align-items: center;
   svg {
     height: 20px;
   }
+  position: relative;
 `
 
-const Circle = styled.span`
+const Circle = styled(motion.span)`
   width: 5px;
   height: 5px;
   border-radius: 5px;
@@ -70,6 +74,14 @@ const Circle = styled.span`
   margin: 0 auto;
 
   background-color: ${(props) => props.theme.red};
+`
+
+const Input = styled(motion.input)`
+  // 변화가 시작하는 위치
+  transform-origin: right center;
+  // input이 search버튼 왼쪽에 있게함
+  position: absolute;
+  left: -190px;
 `
 
 const logoVariants = {
@@ -88,9 +100,12 @@ const logoVariants = {
 }
 
 function Header() {
+  const [searchOpen, setSearchOpen] = useState(false)
   const homeMatch = useRouteMatch('/')
   const tvMatch = useRouteMatch('/tv')
   console.log(homeMatch, tvMatch)
+
+  const toggleSearch = () => setSearchOpen(prev => !prev)
   return (
     <Nav>
       <Col>
@@ -109,17 +124,22 @@ function Header() {
         <Items>
           <Item>
             {/* homeMatch의 isExact가 true인지 확인하고 Circle컴포넌트를 보여줌 */}
-            <Link to="/">Home {homeMatch?.isExact && <Circle />}</Link>
+            <Link to="/">Home {homeMatch?.isExact && <Circle layoutId='circle'/>}</Link>
           </Item>
           <Item>
             {/* tvMatch가 존재하는 지 확인하고 Circle컴포넌트를 보여줌 */}
-            <Link to="/tv">TV Shows {tvMatch && <Circle />}</Link>
+            <Link to="/tv">TV Shows {tvMatch && <Circle layoutId='circle'/>}</Link>
           </Item>
         </Items>
       </Col>
       <Col>
         <Search>
-          <svg
+          <motion.svg
+            onClick={toggleSearch}
+            // searchOpen에 따라 돋보기가 움직임
+            animate={{x: searchOpen ? -220 : 0}}
+            // 움직일 때 튀지않게 linear로 바꿔줌
+            transition={{type:"linear"}}
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"
@@ -129,7 +149,9 @@ function Header() {
               d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
               clipRule="evenodd"
             ></path>
-          </svg>
+          </motion.svg>
+          {/* searchOpen이 true면 scaleX 1, 아니면 0 -> 애니메이션 중앙에서 시작함*/}
+          <Input transition={{type:"linear"}} animate={{ scaleX: searchOpen ? 1 : 0}} placeholder='Search for movie or tv shhow...' />
         </Search>
       </Col>
     </Nav>
