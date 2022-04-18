@@ -1,20 +1,21 @@
-import { useQuery } from 'react-query'
-import styled from 'styled-components'
-import { motion, AnimatePresence } from 'framer-motion'
-import { getMovies, IGetMoviesResult } from '../api'
-import { makeImagePath } from '../utils'
-import { useState } from 'react'
+import { useQuery } from "react-query";
+import styled from "styled-components";
+import { motion, AnimatePresence } from "framer-motion";
+import { getMovies, IGetMoviesResult } from "../api";
+import { makeImagePath } from "../utils";
+import { useState } from "react";
+import { useHistory, useRouteMatch } from "react-router-dom";
 
 const Wrapper = styled.div`
   background: black;
-`
+`;
 
 const Loader = styled.div`
   height: 20vh;
   display: flex;
   justify-content: center;
   align-items: center;
-`
+`;
 
 // props 타입 알려줌
 const Banner = styled.div<{ bgPhoto: string }>`
@@ -31,25 +32,25 @@ const Banner = styled.div<{ bgPhoto: string }>`
   background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.9)),
     url(${(props) => props.bgPhoto});
   background-size: cover;
-`
+`;
 
 const Title = styled.h2`
   font-size: 68px;
   margin-bottom: 20px;
-`
+`;
 
 const Overview = styled.p`
   font-size: 36px;
   // 줄거리 너무 길기 때문에 너비를 화면의 반으로 설정
   width: 50%;
-`
+`;
 
 const Slider = styled.div`
   // state 기준 위치
   position: relative;
   // 슬라이더를 좀 위로 올림
   top: -100px;
-`
+`;
 
 const Row = styled(motion.div)`
   display: grid;
@@ -58,7 +59,7 @@ const Row = styled(motion.div)`
   // 부모 기준 위치
   position: absolute;
   width: 100%;
-`
+`;
 
 // Box에 이미지 props 들어가는 type알려줌
 const Box = styled(motion.div)<{ bgPhoto: string }>`
@@ -68,6 +69,7 @@ const Box = styled(motion.div)<{ bgPhoto: string }>`
   background-position: center center;
   height: 200px;
   font-size: 66px;
+  cursor: pointer;
   // 포스터 잘리지 않게 첫번째, 마지막 박스는 transform-origin 줌
   &:first-child {
     transform-origin: center left;
@@ -75,7 +77,7 @@ const Box = styled(motion.div)<{ bgPhoto: string }>`
   &:last-child {
     transform-origin: center right;
   }
-`
+`;
 
 const Info = styled(motion.div)`
   padding: 10px;
@@ -88,7 +90,7 @@ const Info = styled(motion.div)`
     text-align: center;
     font-size: 18px;
   }
-`
+`;
 
 const rowVariants = {
   hidden: {
@@ -97,7 +99,7 @@ const rowVariants = {
   },
   visible: { x: 0 },
   exit: { x: -window.outerWidth - 5 },
-}
+};
 
 // Box Animation
 const BoxVariants = {
@@ -112,10 +114,10 @@ const BoxVariants = {
     transition: {
       delay: 0.5,
       duaration: 0.3,
-      type: 'tween',
+      type: "tween",
     },
   },
-}
+};
 
 const infoVariants = {
   hover: {
@@ -123,35 +125,42 @@ const infoVariants = {
     transition: {
       delay: 0.5,
       duaration: 0.3,
-      type: 'tween',
+      type: "tween",
     },
   },
-}
+};
 
 // 한 번에 보여주고 싶은 영화의 수
-const offset = 6
+const offset = 6;
 
 function Home() {
+  const history = useHistory();
+  const bigMovieMatch = useRouteMatch<{ movieId: string }>("/movies/:movieId");
+  console.log(bigMovieMatch);
   const { data, isLoading } = useQuery<IGetMoviesResult>(
-    ['movies', 'nowPlaying'],
-    getMovies,
-  )
+    ["movies", "nowPlaying"],
+    getMovies
+  );
   // Row index
-  const [index, setIndex] = useState(0)
-  const [leaving, setLeaving] = useState(false)
+  const [index, setIndex] = useState(0);
+  const [leaving, setLeaving] = useState(false);
   const increaseIndex = () => {
     // 영화 개수에 따라 page가 상한에 도달했으면 index 0 으로 만들어줌
     if (data) {
-      if (leaving) return
-      toggleLeaving()
-      const totalMovies = data.results.length - 1 // 배너로 사용하는거 제외
-      const maxIndex = Math.floor(totalMovies / offset) - 1 // index 0에서부터 시작하므로
+      if (leaving) return;
+      toggleLeaving();
+      const totalMovies = data.results.length - 1; // 배너로 사용하는거 제외
+      const maxIndex = Math.floor(totalMovies / offset) - 1; // index 0에서부터 시작하므로
       // maxIndex에 도달하면 0으로
-      setIndex((prev) => (prev === maxIndex ? 0 : prev + 1))
+      setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
     }
-  }
-  const toggleLeaving = () => setLeaving((prev) => !prev)
-
+  };
+  const toggleLeaving = () => setLeaving((prev) => !prev);
+  // 박스가 클릭되었을 때 영화 id를 받고싶음
+  const onBoxClicked = (movieId: number) => {
+    // URL 바꾸기: history
+    history.push(`/movies/${movieId}`);
+  };
   return (
     <Wrapper>
       {isLoading ? (
@@ -163,7 +172,7 @@ function Home() {
           {/* data가 존재하지 않을 때의 fallback 만들어줘야함 */}
           <Banner
             onClick={increaseIndex}
-            bgPhoto={makeImagePath(data?.results[0].backdrop_path || '')}
+            bgPhoto={makeImagePath(data?.results[0].backdrop_path || "")}
           >
             <Title>{data?.results[0].title || undefined}</Title>
             <Overview>{data?.results[0].overview || undefined}</Overview>
@@ -175,7 +184,7 @@ function Home() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                transition={{ type: 'tween', duration: 1 }}
+                transition={{ type: "tween", duration: 1 }}
                 key={index}
               >
                 {/* 0번째 영화는 배경에 만드는데 사용했으므로 제외 */}
@@ -184,12 +193,15 @@ function Home() {
                   .slice(offset * index, offset * index + offset)
                   .map((movie) => (
                     <Box
+                      // layoutId는 string이어야함
+                      layoutId={movie.id + ""}
                       key={movie.id}
                       whileHover="hover"
                       initial="normal"
                       variants={BoxVariants}
-                      transition={{ type: 'tween' }}
-                      bgPhoto={makeImagePath(movie.backdrop_path, 'w500')}
+                      onClick={() => onBoxClicked(movie.id)}
+                      transition={{ type: "tween" }}
+                      bgPhoto={makeImagePath(movie.backdrop_path, "w500")}
                     >
                       <Info variants={infoVariants}>
                         <h4>{movie.title}</h4>
@@ -199,10 +211,31 @@ function Home() {
               </Row>
             </AnimatePresence>
           </Slider>
+
+          <AnimatePresence>
+            {/* bigMovieMatch가 존재할 때만 보여야함 */}
+            {bigMovieMatch ? (
+              // Box마다 unipue한 layoutId을 줘야하므로 movieId를 사용
+              <motion.div
+                // typescript한테 bigMovieMatch 설명해줘야함
+                layoutId={bigMovieMatch.params.movieId}
+                style={{
+                  position: "absolute",
+                  width: "40vw",
+                  height: "80vh",
+                  backgroundColor: "red",
+                  top: 50,
+                  left: 0,
+                  right: 0,
+                  margin: "0 auto",
+                }}
+              />
+            ) : null}
+          </AnimatePresence>
         </>
       )}
     </Wrapper>
-  )
+  );
 }
 
-export default Home
+export default Home;

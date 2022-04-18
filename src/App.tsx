@@ -1,8 +1,8 @@
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
-import Header from './Components/Header'
-import Home from './Routes/Home'
-import Search from './Routes/Search'
-import Tv from './Routes/Tv'
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import Header from "./Components/Header";
+import Home from "./Routes/Home";
+import Search from "./Routes/Search";
+import Tv from "./Routes/Tv";
 
 function App() {
   return (
@@ -15,12 +15,13 @@ function App() {
         <Route path="/search">
           <Search />
         </Route>
-        <Route path="/">
+        {/* 두 경우에 모두 Home을 render하도록 path를 배열로 묶어줌 */}
+        <Route path={["/", "/movies/:movieId"]}>
           <Home />
         </Route>
       </Switch>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;
