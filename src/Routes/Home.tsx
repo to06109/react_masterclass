@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
 import styled from "styled-components";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useViewportScroll } from "framer-motion";
 import { getMovies, IGetMoviesResult } from "../api";
 import { makeImagePath } from "../utils";
 import { useState } from "react";
@@ -92,6 +92,50 @@ const Info = styled(motion.div)`
   }
 `;
 
+// 카드 나올 때 뒷배경
+const Overlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+`;
+
+const BigMovie = styled(motion.div)`
+  position: absolute;
+  width: 40vw;
+  height: 80vh;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  border-radius: 15px;
+  overflow: hidden; // 이미지 삐져나오는거 숨김
+  background-color: ${(props) => props.theme.black.lighter};
+`;
+
+const BicCover = styled.div`
+  width: 100%;
+  background-size: cover;
+  background-position: center center;
+  height: 400px;
+`;
+
+const BigTitle = styled.h3`
+  color: ${(props) => props.theme.white.lighter};
+  padding: 10px;
+  font-size: 46px;
+  position: relative;
+  top: -80px;
+`;
+
+const BigOverview = styled.p`
+  padding: 20px;
+  position: relative;
+  top: -80px;
+  color: ${(props) => props.theme.white.lighter};
+`;
+
 const rowVariants = {
   hidden: {
     // Row와 Row 사이 gap 조절
@@ -136,7 +180,7 @@ const offset = 6;
 function Home() {
   const history = useHistory();
   const bigMovieMatch = useRouteMatch<{ movieId: string }>("/movies/:movieId");
-  console.log(bigMovieMatch);
+  const { scrollY } = useViewportScroll();
   const { data, isLoading } = useQuery<IGetMoviesResult>(
     ["movies", "nowPlaying"],
     getMovies
@@ -161,6 +205,16 @@ function Home() {
     // URL 바꾸기: history
     history.push(`/movies/${movieId}`);
   };
+  const onOverlayClick = () => {
+    history.push("/");
+  };
+
+  // 카드에서 데이터 재활용.
+  // bigMovieMatch가 존재하는 경우에 클릭한 영화 아이디와 동일한 영화정보를 data에서 꺼내 clickedMovie에 저장함
+  // string 앞에 +붙이면 number됨
+  const clickedMovie =
+    bigMovieMatch?.params.movieId &&
+    data?.results.find((movie) => movie.id === +bigMovieMatch.params.movieId);
   return (
     <Wrapper>
       {isLoading ? (
@@ -211,25 +265,42 @@ function Home() {
               </Row>
             </AnimatePresence>
           </Slider>
-
           <AnimatePresence>
             {/* bigMovieMatch가 존재할 때만 보여야함 */}
             {bigMovieMatch ? (
-              // Box마다 unipue한 layoutId을 줘야하므로 movieId를 사용
-              <motion.div
-                // typescript한테 bigMovieMatch 설명해줘야함
-                layoutId={bigMovieMatch.params.movieId}
-                style={{
-                  position: "absolute",
-                  width: "40vw",
-                  height: "80vh",
-                  backgroundColor: "red",
-                  top: 50,
-                  left: 0,
-                  right: 0,
-                  margin: "0 auto",
-                }}
-              />
+              <>
+                <Overlay
+                  exit={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  onClick={onOverlayClick}
+                />
+                {/* Box마다 unipue한 layoutId을 줘야하므로 movieId를 사용 */}
+                <BigMovie
+                  style={{
+                    // 사용자가 어디 있더라도 top의 속성값은 거기가 됨
+                    top: scrollY.get() + 100,
+                  }}
+                  // typescript한테 bigMovieMatch 설명해줘야함
+                  layoutId={bigMovieMatch.params.movieId}
+                >
+                  {clickedMovie && (
+                    <>
+                      <BicCover
+                        // gradient -> backgroundImage 2개 넣으면 됨
+                        // to top: gradient 방향 아래 ->  위로
+                        style={{
+                          backgroundImage: `linear-gradient(to top, black, transparent),  url(${makeImagePath(
+                            clickedMovie.backdrop_path,
+                            "w500"
+                          )})`,
+                        }}
+                      />
+                      <BigTitle>{clickedMovie.title}</BigTitle>
+                      <BigOverview>{clickedMovie.overview}</BigOverview>
+                    </>
+                  )}
+                </BigMovie>
+              </>
             ) : null}
           </AnimatePresence>
         </>
