@@ -1,7 +1,8 @@
 import styled from "styled-components";
 import { motion, useAnimation, useViewportScroll } from "framer-motion";
-import { Link, useRouteMatch } from "react-router-dom";
+import { Link, useHistory, useRouteMatch } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 
 const Nav = styled(motion.nav)`
   display: flex;
@@ -51,7 +52,7 @@ const Item = styled.li`
     color: ${(props) => props.theme.white.lighter};
   }
 `;
-const Search = styled.span`
+const Search = styled.form`
   color: white;
   display: flex;
   align-items: center;
@@ -115,6 +116,10 @@ const navVariants = {
   },
 };
 
+interface IForm {
+  keyword: string;
+}
+
 function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const homeMatch = useRouteMatch("/");
@@ -147,7 +152,12 @@ function Header() {
       }
     });
   }, [scrollY, navAnimation]);
-
+  const history = useHistory();
+  const { register, handleSubmit } = useForm<IForm>();
+  const onValid = (data: IForm) => {
+    // 주소로 query argument 보냄
+    history.push(`/search?keyword=${data.keyword}`);
+  };
   return (
     <Nav animate={navAnimation} variants={navVariants} initial="top">
       <Col>
@@ -179,7 +189,8 @@ function Header() {
         </Items>
       </Col>
       <Col>
-        <Search>
+        {/* 데이터가 유효할 때 onValid 함수 실행 */}
+        <Search onSubmit={handleSubmit(onValid)}>
           <motion.svg
             onClick={toggleSearch}
             // searchOpen에 따라 돋보기가 움직임
@@ -198,6 +209,7 @@ function Header() {
           </motion.svg>
           {/* searchOpen이 true면 scaleX 1, 아니면 0 -> 애니메이션 중앙에서 시작함*/}
           <Input
+            {...register("keyword", { required: true, minLength: 2 })}
             animate={inputAnimation}
             initial={{ scaleX: 0 }}
             transition={{ type: "linear" }}
