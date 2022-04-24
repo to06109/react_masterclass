@@ -64,13 +64,21 @@ export interface SpokenLanguage {
 const Wrapper = styled.div`
   background: black;
   margin-bottom: 20%;
+  padding: 20px;
+`;
+
+const Title = styled.div`
+  position: relative;
+  top: -70px;
+  font-weight: bolder;
+  font-size: 26px;
 `;
 
 const Slider = styled.div`
   // state 기준 위치
   position: relative;
   // 슬라이더를 좀 위로 올림
-  top: -100px;
+  top: -50px;
   display: flex;
   /* flex-direction: column; */
 `;
@@ -320,7 +328,7 @@ function MovieSlider({ data, isLoading, title }: ISlider) {
     <Wrapper>
       {isLoading ? null : (
         <>
-          <h1>{title}</h1>
+          <Title>{title}</Title>
           <Slider>
             <AnimatePresence initial={false} onExitComplete={toggleLeaving}>
               <Row
